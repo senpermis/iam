@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fawroo.iam.service.KeycloakService;
+import com.fawroo.iam.service.RealmService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,48 +25,48 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RealmController {
 
-    private final KeycloakService keycloakService;
+    private final RealmService realmService;
 
     @PostMapping
     public ResponseEntity<Void> createRealm(@RequestBody RealmRepresentation realmRepresentation) {
-        keycloakService.createRealm(realmRepresentation);
+        realmService.createRealm(realmRepresentation);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
     
     @GetMapping
     public ResponseEntity<List<RealmRepresentation>> getAllRealms() {
-        List<RealmRepresentation> realms = keycloakService.getAllRealms();
+        List<RealmRepresentation> realms = realmService.getAllRealms();
         return ResponseEntity.ok(realms);
     }
     
     @GetMapping("/{realmName}")
     public ResponseEntity<RealmRepresentation> getRealm(@PathVariable String realmName) {
-        RealmRepresentation realm = keycloakService.getRealm(realmName);
+        RealmRepresentation realm = realmService.getRealm(realmName);
         return ResponseEntity.ok(realm);
     }
     
     @PutMapping("/{realmName}")
     public ResponseEntity<Void> updateRealm(@PathVariable String realmName, 
                                           @RequestBody RealmRepresentation realmRepresentation) {
-        keycloakService.updateRealm(realmName, realmRepresentation);
+        realmService.updateRealm(realmName, realmRepresentation);
         return ResponseEntity.ok().build();
     }
     
     @DeleteMapping("/{realmName}")
     public ResponseEntity<Void> deleteRealm(@PathVariable String realmName) {
-        keycloakService.deleteRealm(realmName);
+        realmService.deleteRealm(realmName);
         return ResponseEntity.noContent().build();
     }
     
     @GetMapping("/{realmName}/exists")
     public ResponseEntity<Map<String, Boolean>> realmExists(@PathVariable String realmName) {
-        boolean exists = keycloakService.realmExists(realmName);
+        boolean exists = realmService.realmExists(realmName);
         return ResponseEntity.ok(Collections.singletonMap("exists", exists));
     }
     
     @GetMapping("/{realmName}/stats")
     public ResponseEntity<Map<String, Object>> getRealmStats(@PathVariable String realmName) {
-        Map<String, Object> stats = keycloakService.getRealmStatistics(realmName);
+        Map<String, Object> stats = realmService.getRealmStatistics(realmName);
         return ResponseEntity.ok(stats);
     }
 }

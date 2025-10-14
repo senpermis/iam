@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fawroo.iam.model.dto.PasswordUpdateRequest;
 import com.fawroo.iam.model.dto.UserProfile;
 import com.fawroo.iam.model.dto.UserRequest;
-import com.fawroo.iam.service.KeycloakService;
+import com.fawroo.iam.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,31 +35,31 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final KeycloakService keycloakService;
+    private final UserService userService;
 
     @PostMapping
     public ResponseEntity<Map<String, String>> createUser(@RequestBody UserRequest userRequest) {
-        String userId = keycloakService.createUser(userRequest);
+        String userId = userService.createUser(userRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Collections.singletonMap("userId", userId));
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserProfile> getUser(@PathVariable String userId) {
-        UserProfile profile = keycloakService.getUserProfile(userId);
+        UserProfile profile = userService.getUserProfile(userId);
         return ResponseEntity.ok(profile);
     }
 
     @GetMapping("/username/{username}")
     public ResponseEntity<UserProfile> getUserByUsername(@PathVariable String username) {
-        UserRepresentation user = keycloakService.getUserByUsername(username);
+        UserRepresentation user = userService.getUserByUsername(username);
         UserProfile profile = mapToUserProfile(user);
         return ResponseEntity.ok(profile);
     }
 
     @GetMapping
     public ResponseEntity<List<UserProfile>> getAllUsers() {
-        List<UserRepresentation> users = keycloakService.getAllUsers();
+        List<UserRepresentation> users = userService.getAllUsers();
         List<UserProfile> profiles = users.stream()
                 .map(this::mapToUserProfile)
                 .collect(Collectors.toList());
@@ -71,7 +71,7 @@ public class UserController {
             @RequestParam String query,
             @RequestParam(defaultValue = "0") int first,
             @RequestParam(defaultValue = "20") int max) {
-        List<UserRepresentation> users = keycloakService.searchUsers(query, first, max);
+        List<UserRepresentation> users = userService.searchUsers(query, first, max);
         List<UserProfile> profiles = users.stream()
                 .map(this::mapToUserProfile)
                 .collect(Collectors.toList());
@@ -81,85 +81,85 @@ public class UserController {
     @PutMapping("/{userId}")
     public ResponseEntity<Void> updateUser(@PathVariable String userId,
             @RequestBody UserRequest userRequest) {
-        keycloakService.updateUser(userId, userRequest);
+        userService.updateUser(userId, userRequest);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable String userId) {
-        keycloakService.deleteUser(userId);
+        userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{userId}/password")
     public ResponseEntity<Void> updatePassword(@PathVariable String userId,
             @RequestBody PasswordUpdateRequest passwordRequest) {
-        keycloakService.updatePassword(userId, passwordRequest);
+        userService.updatePassword(userId, passwordRequest);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{userId}/sessions")
     public ResponseEntity<List<UserSessionRepresentation>> getUserSessions(@PathVariable String userId) {
-        List<UserSessionRepresentation> sessions = keycloakService.getUserSessions(userId);
+        List<UserSessionRepresentation> sessions = userService.getUserSessions(userId);
         return ResponseEntity.ok(sessions);
     }
 
     @PostMapping("/{userId}/logout")
     public ResponseEntity<Void> logoutUser(@PathVariable String userId) {
-        keycloakService.logoutUser(userId);
+        userService.logoutUser(userId);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{userId}/status")
     public ResponseEntity<Void> setUserStatus(@PathVariable String userId,
             @RequestParam boolean enabled) {
-        keycloakService.setUserEnabled(userId, enabled);
+        userService.setUserEnabled(userId, enabled);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/count")
     public ResponseEntity<Map<String, Integer>> getUsersCount() {
-        Integer count = keycloakService.getUsersCount();
+        Integer count = userService.getUsersCount();
         return ResponseEntity.ok(Collections.singletonMap("count", count));
     }
 
     @GetMapping("/{userId}/groups")
     public ResponseEntity<List<GroupRepresentation>> getUserGroups(@PathVariable String userId) {
-        List<GroupRepresentation> groups = keycloakService.getUserGroups(userId);
+        List<GroupRepresentation> groups = userService.getUserGroups(userId);
         return ResponseEntity.ok(groups);
     }
 
     @PostMapping("/{userId}/groups/{groupId}")
     public ResponseEntity<Void> addUserToGroup(@PathVariable String userId,
             @PathVariable String groupId) {
-        keycloakService.addUserToGroup(userId, groupId);
+        userService.addUserToGroup(userId, groupId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{userId}/groups/{groupId}")
     public ResponseEntity<Void> removeUserFromGroup(@PathVariable String userId,
             @PathVariable String groupId) {
-        keycloakService.removeUserFromGroup(userId, groupId);
+        userService.removeUserFromGroup(userId, groupId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{userId}/roles")
     public ResponseEntity<List<RoleRepresentation>> getUserRoles(@PathVariable String userId) {
-        List<RoleRepresentation> roles = keycloakService.getUserRoles(userId);
+        List<RoleRepresentation> roles = userService.getUserRoles(userId);
         return ResponseEntity.ok(roles);
     }
 
     @PostMapping("/{userId}/roles")
     public ResponseEntity<Void> assignRoleToUser(@PathVariable String userId,
             @RequestBody RoleRepresentation role) {
-        keycloakService.assignRoleToUser(userId, role);
+        userService.assignRoleToUser(userId, role);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{userId}/roles")
     public ResponseEntity<Void> removeRoleFromUser(@PathVariable String userId,
             @RequestBody RoleRepresentation role) {
-        keycloakService.removeRoleFromUser(userId, role);
+        userService.removeRoleFromUser(userId, role);
         return ResponseEntity.ok().build();
     }
 
@@ -167,31 +167,31 @@ public class UserController {
     public ResponseEntity<List<RoleRepresentation>> getUserClientRoles(
             @PathVariable String userId,
             @PathVariable String clientId) {
-        List<RoleRepresentation> roles = keycloakService.getUserClientRoles(userId, clientId);
+        List<RoleRepresentation> roles = userService.getUserClientRoles(userId, clientId);
         return ResponseEntity.ok(roles);
     }
 
     @PostMapping("/{userId}/send-verification-email")
     public ResponseEntity<Void> sendVerificationEmail(@PathVariable String userId) {
-        keycloakService.sendVerificationEmail(userId);
+        userService.sendVerificationEmail(userId);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{userId}/send-reset-password")
     public ResponseEntity<Void> sendResetPassword(@PathVariable String userId) {
-        keycloakService.sendResetPassword(userId);
+        userService.sendResetPassword(userId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{userId}/consents")
     public ResponseEntity<List<Map<String, Object>>> getUserConsents(@PathVariable String userId) {
-        List<Map<String, Object>> consents = keycloakService.getUserConsents(userId);
+        List<Map<String, Object>> consents = userService.getUserConsents(userId);
         return ResponseEntity.ok(consents);
     }
 
     @DeleteMapping("/{userId}/consents")
     public ResponseEntity<Void> revokeUserConsents(@PathVariable String userId) {
-        keycloakService.revokeUserConsents(userId);
+        userService.revokeUserConsents(userId);
         return ResponseEntity.ok().build();
     }
 
@@ -199,33 +199,33 @@ public class UserController {
     public ResponseEntity<List<UserSessionRepresentation>> getOfflineSessions(
             @PathVariable String userId,
             @PathVariable String clientId) {
-        List<UserSessionRepresentation> sessions = keycloakService.getOfflineSessions(userId, clientId);
+        List<UserSessionRepresentation> sessions = userService.getOfflineSessions(userId, clientId);
         return ResponseEntity.ok(sessions);
     }
 
     @GetMapping("/{userId}/federated-identity")
     public ResponseEntity<List<FederatedIdentityRepresentation>> getUserFederatedIdentity(
             @PathVariable String userId) {
-        List<FederatedIdentityRepresentation> federatedIdentity = keycloakService.getUserFederatedIdentity(userId);
+        List<FederatedIdentityRepresentation> federatedIdentity = userService.getUserFederatedIdentity(userId);
         return ResponseEntity.ok(federatedIdentity);
     }
 
     @GetMapping("/{userId}/exists")
     public ResponseEntity<Map<String, Boolean>> checkUserExists(@PathVariable String userId) {
-        boolean exists = keycloakService.userExists(userId);
+        boolean exists = userService.userExists(userId);
         return ResponseEntity.ok(Collections.singletonMap("exists", exists));
     }
 
     @PostMapping("/bulk/disable")
     public ResponseEntity<Void> bulkDisableUsers(@RequestBody List<String> userIds) {
-        keycloakService.bulkDisableUsers(userIds);
+        userService.bulkDisableUsers(userIds);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getUserStats() {
-        Integer totalUsers = keycloakService.getUsersCount();
-        List<UserRepresentation> enabledUsers = keycloakService.searchUsers("enabled:true", 0, 1000);
+        Integer totalUsers = userService.getUsersCount();
+        List<UserRepresentation> enabledUsers = userService.searchUsers("enabled:true", 0, 1000);
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalUsers", totalUsers);

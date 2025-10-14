@@ -2,20 +2,16 @@ package com.fawroo.iam.service;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.FederatedIdentityRepresentation;
 import org.keycloak.representations.idm.GroupRepresentation;
-import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.representations.idm.UserSessionRepresentation;
@@ -28,308 +24,18 @@ import com.fawroo.iam.model.dto.UserProfile;
 import com.fawroo.iam.model.dto.UserRequest;
 
 import jakarta.ws.rs.core.Response;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class KeycloakService {
+@RequiredArgsConstructor
+public class UserService {
 
     private final Keycloak keycloak;
-    private final String realm;
-
-    public KeycloakService(Keycloak keycloak, @Value("${keycloak.realm}") String realm) {
-        this.keycloak = keycloak;
-        this.realm = "senpermis"; // realm;
-    }
     
-    // ========== REALM MANAGEMENT ==========
-    
-    // CREATE REALM
-    public void createRealm(RealmRepresentation realmRepresentation) {
-        try {
-            keycloak.realms().create(realmRepresentation);
-            log.info("Realm created successfully: {}", realmRepresentation.getRealm());
-        } catch (Exception e) {
-            log.error("Error creating realm: {}", e.getMessage());
-            throw new RuntimeException("Failed to create realm: " + e.getMessage());
-        }
-    }
-    
-    // GET ALL REALMS
-    public List<RealmRepresentation> getAllRealms() {
-        try {
-            return keycloak.realms().findAll();
-        } catch (Exception e) {
-            log.error("Error getting all realms: {}", e.getMessage());
-            throw new RuntimeException("Failed to get realms: " + e.getMessage());
-        }
-    }
-    
-    // GET REALM BY NAME
-    public RealmRepresentation getRealm(String realmName) {
-        try {
-            return keycloak.realms().realm(realmName).toRepresentation();
-        } catch (Exception e) {
-            log.error("Error getting realm {}: {}", realmName, e.getMessage());
-            throw new RuntimeException("Realm not found: " + e.getMessage());
-        }
-    }
-    
-    // UPDATE REALM
-    public void updateRealm(String realmName, RealmRepresentation realmRepresentation) {
-        try {
-            realmRepresentation.setRealm(realmName);
-            keycloak.realms().realm(realmName).update(realmRepresentation);
-            log.info("Realm updated successfully: {}", realmName);
-        } catch (Exception e) {
-            log.error("Error updating realm {}: {}", realmName, e.getMessage());
-            throw new RuntimeException("Failed to update realm: " + e.getMessage());
-        }
-    }
-    
-    // DELETE REALM
-    public void deleteRealm(String realmName) {
-        try {
-            keycloak.realms().realm(realmName).remove();
-            log.info("Realm deleted successfully: {}", realmName);
-        } catch (Exception e) {
-            log.error("Error deleting realm {}: {}", realmName, e.getMessage());
-            throw new RuntimeException("Failed to delete realm: " + e.getMessage());
-        }
-    }
-    
-    // REALM EXISTS
-    public boolean realmExists(String realmName) {
-        try {
-            keycloak.realms().realm(realmName).toRepresentation();
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    
-    // ========== ROLE MANAGEMENT ==========
-    
-    // CREATE REALM ROLE
-    public void createRealmRole(String realmName, RoleRepresentation roleRepresentation) {
-        try {
-            keycloak.realms().realm(realmName).roles().create(roleRepresentation);
-            log.info("Realm role created successfully: {} in realm {}", roleRepresentation.getName(), realmName);
-        } catch (Exception e) {
-            log.error("Error creating realm role: {}", e.getMessage());
-            throw new RuntimeException("Failed to create realm role: " + e.getMessage());
-        }
-    }
-    
-    // GET ALL REALM ROLES
-    public List<RoleRepresentation> getAllRealmRoles(String realmName) {
-        try {
-            return keycloak.realms().realm(realmName).roles().list();
-        } catch (Exception e) {
-            log.error("Error getting realm roles for realm {}: {}", realmName, e.getMessage());
-            throw new RuntimeException("Failed to get realm roles: " + e.getMessage());
-        }
-    }
-    
-    // GET REALM ROLE BY NAME
-    public RoleRepresentation getRealmRole(String realmName, String roleName) {
-        try {
-            return keycloak.realms().realm(realmName).roles().get(roleName).toRepresentation();
-        } catch (Exception e) {
-            log.error("Error getting realm role {}: {}", roleName, e.getMessage());
-            throw new RuntimeException("Role not found: " + e.getMessage());
-        }
-    }
-    
-    // UPDATE REALM ROLE
-    public void updateRealmRole(String realmName, String roleName, RoleRepresentation roleRepresentation) {
-        try {
-            keycloak.realms().realm(realmName).roles().get(roleName).update(roleRepresentation);
-            log.info("Realm role updated successfully: {} in realm {}", roleName, realmName);
-        } catch (Exception e) {
-            log.error("Error updating realm role {}: {}", roleName, e.getMessage());
-            throw new RuntimeException("Failed to update realm role: " + e.getMessage());
-        }
-    }
-    
-    // DELETE REALM ROLE
-    public void deleteRealmRole(String realmName, String roleName) {
-        try {
-            keycloak.realms().realm(realmName).roles().deleteRole(roleName);
-            log.info("Realm role deleted successfully: {} from realm {}", roleName, realmName);
-        } catch (Exception e) {
-            log.error("Error deleting realm role {}: {}", roleName, e.getMessage());
-            throw new RuntimeException("Failed to delete realm role: " + e.getMessage());
-        }
-    }
-    
-    // CREATE CLIENT ROLE
-    public void createClientRole(String realmName, String clientId, RoleRepresentation roleRepresentation) {
-        try {
-            String clientUuid = getClientUuid(realmName, clientId);
-            keycloak.realms().realm(realmName).clients().get(clientUuid).roles().create(roleRepresentation);
-            log.info("Client role created successfully: {} for client {} in realm {}", 
-                    roleRepresentation.getName(), clientId, realmName);
-        } catch (Exception e) {
-            log.error("Error creating client role: {}", e.getMessage());
-            throw new RuntimeException("Failed to create client role: " + e.getMessage());
-        }
-    }
-    
-    // GET ALL CLIENT ROLES
-    public List<RoleRepresentation> getAllClientRoles(String realmName, String clientId) {
-        try {
-            String clientUuid = getClientUuid(realmName, clientId);
-            return keycloak.realms().realm(realmName).clients().get(clientUuid).roles().list();
-        } catch (Exception e) {
-            log.error("Error getting client roles for client {}: {}", clientId, e.getMessage());
-            throw new RuntimeException("Failed to get client roles: " + e.getMessage());
-        }
-    }
-    
-    // ========== GROUP MANAGEMENT ==========
-    
-    // CREATE GROUP
-    public String createGroup(String realmName, GroupRepresentation groupRepresentation) {
-        try {
-            Response response = keycloak.realms().realm(realmName).groups().add(groupRepresentation);
-            
-            if (response.getStatus() == 201) {
-                String groupId = extractGroupIdFromLocation(response.getLocation());
-                log.info("Group created successfully: {} in realm {}", groupRepresentation.getName(), realmName);
-                return groupId;
-            } else {
-                throw new RuntimeException("Failed to create group. Status: " + response.getStatus());
-            }
-        } catch (Exception e) {
-            log.error("Error creating group: {}", e.getMessage());
-            throw new RuntimeException("Failed to create group: " + e.getMessage());
-        }
-    }
-    
-    // GET ALL GROUPS
-    public List<GroupRepresentation> getAllGroups(String realmName) {
-        try {
-            return keycloak.realms().realm(realmName).groups().groups();
-        } catch (Exception e) {
-            log.error("Error getting groups for realm {}: {}", realmName, e.getMessage());
-            throw new RuntimeException("Failed to get groups: " + e.getMessage());
-        }
-    }
-    
-    // GET GROUP BY ID
-    public GroupRepresentation getGroup(String realmName, String groupId) {
-        try {
-            return keycloak.realms().realm(realmName).groups().group(groupId).toRepresentation();
-        } catch (Exception e) {
-            log.error("Error getting group {}: {}", groupId, e.getMessage());
-            throw new RuntimeException("Group not found: " + e.getMessage());
-        }
-    }
-    
-    // GET GROUP BY NAME/PATH
-    public GroupRepresentation getGroupByPath(String realmName, String path) {
-        try {
-            return keycloak.realms().realm(realmName).getGroupByPath(path);
-        } catch (Exception e) {
-            log.error("Error getting group by path {}: {}", path, e.getMessage());
-            throw new RuntimeException("Group not found: " + e.getMessage());
-        }
-    }
-    
-    // UPDATE GROUP
-    public void updateGroup(String realmName, String groupId, GroupRepresentation groupRepresentation) {
-        try {
-            groupRepresentation.setId(groupId);
-            keycloak.realms().realm(realmName).groups().group(groupId).update(groupRepresentation);
-            log.info("Group updated successfully: {} in realm {}", groupRepresentation.getName(), realmName);
-        } catch (Exception e) {
-            log.error("Error updating group {}: {}", groupId, e.getMessage());
-            throw new RuntimeException("Failed to update group: " + e.getMessage());
-        }
-    }
-    
-    // DELETE GROUP
-    public void deleteGroup(String realmName, String groupId) {
-        try {
-            keycloak.realms().realm(realmName).groups().group(groupId).remove();
-            log.info("Group deleted successfully: {} from realm {}", groupId, realmName);
-        } catch (Exception e) {
-            log.error("Error deleting group {}: {}", groupId, e.getMessage());
-            throw new RuntimeException("Failed to delete group: " + e.getMessage());
-        }
-    }
-    
-    // GET GROUP MEMBERS
-    public List<UserRepresentation> getGroupMembers(String realmName, String groupId) {
-        try {
-            return keycloak.realms().realm(realmName).groups().group(groupId).members();
-        } catch (Exception e) {
-            log.error("Error getting group members for group {}: {}", groupId, e.getMessage());
-            throw new RuntimeException("Failed to get group members: " + e.getMessage());
-        }
-    }
-    
-    // GET GROUP ROLES
-    public List<RoleRepresentation> getGroupRealmRoles(String realmName, String groupId) {
-        try {
-            return keycloak.realms().realm(realmName).groups().group(groupId).roles().realmLevel().listAll();
-        } catch (Exception e) {
-            log.error("Error getting group roles for group {}: {}", groupId, e.getMessage());
-            throw new RuntimeException("Failed to get group roles: " + e.getMessage());
-        }
-    }
-    
-    // ASSIGN ROLE TO GROUP
-    public void assignRoleToGroup(String realmName, String groupId, RoleRepresentation role) {
-        try {
-            List<RoleRepresentation> roles = new ArrayList<>();
-            roles.add(role);
-            keycloak.realms().realm(realmName).groups().group(groupId).roles().realmLevel().add(roles);
-            log.info("Role {} assigned to group {}", role.getName(), groupId);
-        } catch (Exception e) {
-            log.error("Error assigning role to group {}: {}", groupId, e.getMessage());
-            throw new RuntimeException("Failed to assign role to group: " + e.getMessage());
-        }
-    }
-    
-    // ========== HELPER METHODS ==========
-    
-    private String getClientUuid(String realmName, String clientId) {
-        List<ClientRepresentation> clients = keycloak.realms().realm(realmName).clients().findByClientId(clientId);
-        if (clients.isEmpty()) {
-            throw new RuntimeException("Client not found: " + clientId);
-        }
-        return clients.get(0).getId();
-    }
-    
-    private String extractGroupIdFromLocation(URI location) {
-        if (location != null) {
-            String path = location.getPath();
-            return path.substring(path.lastIndexOf('/') + 1);
-        }
-        throw new RuntimeException("Could not extract group ID from response");
-    }
-    
-    // GET REALM STATISTICS
-    public Map<String, Object> getRealmStatistics(String realmName) {
-        try {
-            RealmResource realmResource = keycloak.realms().realm(realmName);
-            
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("realmName", realmName);
-            stats.put("usersCount", realmResource.users().count());
-            stats.put("groupsCount", realmResource.groups().groups().size());
-            stats.put("rolesCount", realmResource.roles().list().size());
-            stats.put("clientsCount", realmResource.clients().findAll().size());
-            stats.put("timestamp", java.time.LocalDateTime.now());
-            
-            return stats;
-        } catch (Exception e) {
-            log.error("Error getting realm statistics for {}: {}", realmName, e.getMessage());
-            throw new RuntimeException("Failed to get realm statistics: " + e.getMessage());
-        }
-    }
+    @Value("${keycloak.realm}")
+    private String realm;
 
     // CREATE USER
     public String createUser(UserRequest userRequest) {
@@ -492,7 +198,6 @@ public class KeycloakService {
             throw new RuntimeException("Failed to update user status: " + e.getMessage());
         }
     }
-    // KeycloakService.java - Ajoutez ces méthodes
 
     // COUNT USERS
     public Integer getUsersCount() {
