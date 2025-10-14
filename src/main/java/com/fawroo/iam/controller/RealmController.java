@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fawroo.iam.service.RealmService;
@@ -32,38 +34,59 @@ public class RealmController {
         realmService.createRealm(realmRepresentation);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
-    
+
     @GetMapping
     public ResponseEntity<List<RealmRepresentation>> getAllRealms() {
         List<RealmRepresentation> realms = realmService.getAllRealms();
         return ResponseEntity.ok(realms);
     }
-    
+
     @GetMapping("/{realmName}")
     public ResponseEntity<RealmRepresentation> getRealm(@PathVariable String realmName) {
         RealmRepresentation realm = realmService.getRealm(realmName);
         return ResponseEntity.ok(realm);
     }
-    
+
     @PutMapping("/{realmName}")
-    public ResponseEntity<Void> updateRealm(@PathVariable String realmName, 
-                                          @RequestBody RealmRepresentation realmRepresentation) {
+    public ResponseEntity<Void> updateRealm(@PathVariable String realmName,
+            @RequestBody RealmRepresentation realmRepresentation) {
         realmService.updateRealm(realmName, realmRepresentation);
         return ResponseEntity.ok().build();
     }
-    
+
     @DeleteMapping("/{realmName}")
     public ResponseEntity<Void> deleteRealm(@PathVariable String realmName) {
         realmService.deleteRealm(realmName);
         return ResponseEntity.noContent().build();
     }
-    
+
     @GetMapping("/{realmName}/exists")
     public ResponseEntity<Map<String, Boolean>> realmExists(@PathVariable String realmName) {
         boolean exists = realmService.realmExists(realmName);
         return ResponseEntity.ok(Collections.singletonMap("exists", exists));
     }
-    
+
+    @GetMapping("/{realmName}/users")
+    public ResponseEntity<List<UserRepresentation>> getRealmUsers(
+            @PathVariable String realmName,
+            @RequestParam(required = false) Integer first,
+            @RequestParam(required = false) Integer max) {
+
+        List<UserRepresentation> users;
+        if (first != null && max != null) {
+            users = realmService.getRealmUsers(realmName, first, max);
+        } else {
+            users = realmService.getRealmUsers(realmName);
+        }
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{realmName}/users/count")
+    public ResponseEntity<Map<String, Integer>> getRealmUsersCount(@PathVariable String realmName) {
+        Integer count = realmService.getRealmUsersCount(realmName);
+        return ResponseEntity.ok(Collections.singletonMap("count", count));
+    }
+
     @GetMapping("/{realmName}/stats")
     public ResponseEntity<Map<String, Object>> getRealmStats(@PathVariable String realmName) {
         Map<String, Object> stats = realmService.getRealmStatistics(realmName);

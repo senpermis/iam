@@ -5,3 +5,9 @@ spring:
     name: iam
   profiles:
     active: dev
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+      file-size-threshold: 2KB
