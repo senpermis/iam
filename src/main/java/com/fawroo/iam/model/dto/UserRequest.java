@@ -15,6 +15,3 @@ public class UserRequest {
     private Map<String, List<String>> attributes;
     private List<Credential> credentials;
 }
-
-
-
