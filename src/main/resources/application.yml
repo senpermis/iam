@@ -1,0 +1,7 @@
+# application-dev.yml
+
+spring:
+  application:
+    name: iam
+  profiles:
+    active: dev

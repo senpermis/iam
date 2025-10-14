@@ -1,0 +1,33 @@
+# application-dev.yml
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        ddl-auto: update  # Uncomment if needed
+    # show-sql: true      # Uncomment if needed
+  datasource:
+    url: jdbc:postgresql://localhost:5432/fawroo-iam
+    username: user-name
+    password: strong-password
+    # initialization-mode: always
+    # initialize: true
+    # schema: classpath:/schema.sql
+    # continue-on-error: true
+
+
+# Keycloak Configuration
+keycloak:
+  auth-server-url: http://localhost:2080
+  realm: master
+  username: admin
+  password: password
+  client-id: admin-cli
+  # client-secret: your-client-secret
+
+
+
+# # Logging
+# logging:
+#   level:
+#     com.yourpackage: DEBUG
