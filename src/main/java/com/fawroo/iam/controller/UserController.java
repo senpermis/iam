@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.keycloak.representations.idm.FederatedIdentityRepresentation;
 import org.keycloak.representations.idm.GroupRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.representations.idm.UserSessionRepresentation;
@@ -36,6 +37,170 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
     private final KeycloakService keycloakService;
+
+    // ========== REALM ENDPOINTS ==========
+    
+    @PostMapping("/realms")
+    public ResponseEntity<Void> createRealm(@RequestBody RealmRepresentation realmRepresentation) {
+        keycloakService.createRealm(realmRepresentation);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+    
+    @GetMapping("/realms")
+    public ResponseEntity<List<RealmRepresentation>> getAllRealms() {
+        List<RealmRepresentation> realms = keycloakService.getAllRealms();
+        return ResponseEntity.ok(realms);
+    }
+    
+    @GetMapping("/realms/{realmName}")
+    public ResponseEntity<RealmRepresentation> getRealm(@PathVariable String realmName) {
+        RealmRepresentation realm = keycloakService.getRealm(realmName);
+        return ResponseEntity.ok(realm);
+    }
+    
+    @PutMapping("/realms/{realmName}")
+    public ResponseEntity<Void> updateRealm(@PathVariable String realmName, 
+                                          @RequestBody RealmRepresentation realmRepresentation) {
+        keycloakService.updateRealm(realmName, realmRepresentation);
+        return ResponseEntity.ok().build();
+    }
+    
+    @DeleteMapping("/realms/{realmName}")
+    public ResponseEntity<Void> deleteRealm(@PathVariable String realmName) {
+        keycloakService.deleteRealm(realmName);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/realms/{realmName}/exists")
+    public ResponseEntity<Map<String, Boolean>> realmExists(@PathVariable String realmName) {
+        boolean exists = keycloakService.realmExists(realmName);
+        return ResponseEntity.ok(Collections.singletonMap("exists", exists));
+    }
+    
+    @GetMapping("/realms/{realmName}/stats")
+    public ResponseEntity<Map<String, Object>> getRealmStats(@PathVariable String realmName) {
+        Map<String, Object> stats = keycloakService.getRealmStatistics(realmName);
+        return ResponseEntity.ok(stats);
+    }
+    
+    // ========== ROLE ENDPOINTS ==========
+    
+    @PostMapping("/realms/{realmName}/roles")
+    public ResponseEntity<Void> createRealmRole(@PathVariable String realmName, 
+                                              @RequestBody RoleRepresentation roleRepresentation) {
+        keycloakService.createRealmRole(realmName, roleRepresentation);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+    
+    @GetMapping("/realms/{realmName}/roles")
+    public ResponseEntity<List<RoleRepresentation>> getAllRealmRoles(@PathVariable String realmName) {
+        List<RoleRepresentation> roles = keycloakService.getAllRealmRoles(realmName);
+        return ResponseEntity.ok(roles);
+    }
+    
+    @GetMapping("/realms/{realmName}/roles/{roleName}")
+    public ResponseEntity<RoleRepresentation> getRealmRole(@PathVariable String realmName, 
+                                                         @PathVariable String roleName) {
+        RoleRepresentation role = keycloakService.getRealmRole(realmName, roleName);
+        return ResponseEntity.ok(role);
+    }
+    
+    @PutMapping("/realms/{realmName}/roles/{roleName}")
+    public ResponseEntity<Void> updateRealmRole(@PathVariable String realmName, 
+                                              @PathVariable String roleName,
+                                              @RequestBody RoleRepresentation roleRepresentation) {
+        keycloakService.updateRealmRole(realmName, roleName, roleRepresentation);
+        return ResponseEntity.ok().build();
+    }
+    
+    @DeleteMapping("/realms/{realmName}/roles/{roleName}")
+    public ResponseEntity<Void> deleteRealmRole(@PathVariable String realmName, 
+                                              @PathVariable String roleName) {
+        keycloakService.deleteRealmRole(realmName, roleName);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @PostMapping("/realms/{realmName}/clients/{clientId}/roles")
+    public ResponseEntity<Void> createClientRole(@PathVariable String realmName,
+                                               @PathVariable String clientId,
+                                               @RequestBody RoleRepresentation roleRepresentation) {
+        keycloakService.createClientRole(realmName, clientId, roleRepresentation);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+    
+    @GetMapping("/realms/{realmName}/clients/{clientId}/roles")
+    public ResponseEntity<List<RoleRepresentation>> getAllClientRoles(@PathVariable String realmName,
+                                                                    @PathVariable String clientId) {
+        List<RoleRepresentation> roles = keycloakService.getAllClientRoles(realmName, clientId);
+        return ResponseEntity.ok(roles);
+    }
+    
+    // ========== GROUP ENDPOINTS ==========
+    
+    @PostMapping("/realms/{realmName}/groups")
+    public ResponseEntity<Map<String, String>> createGroup(@PathVariable String realmName,
+                                                         @RequestBody GroupRepresentation groupRepresentation) {
+        String groupId = keycloakService.createGroup(realmName, groupRepresentation);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Collections.singletonMap("groupId", groupId));
+    }
+    
+    @GetMapping("/realms/{realmName}/groups")
+    public ResponseEntity<List<GroupRepresentation>> getAllGroups(@PathVariable String realmName) {
+        List<GroupRepresentation> groups = keycloakService.getAllGroups(realmName);
+        return ResponseEntity.ok(groups);
+    }
+    
+    @GetMapping("/realms/{realmName}/groups/{groupId}")
+    public ResponseEntity<GroupRepresentation> getGroup(@PathVariable String realmName,
+                                                      @PathVariable String groupId) {
+        GroupRepresentation group = keycloakService.getGroup(realmName, groupId);
+        return ResponseEntity.ok(group);
+    }
+    
+    @GetMapping("/realms/{realmName}/groups/path/{path}")
+    public ResponseEntity<GroupRepresentation> getGroupByPath(@PathVariable String realmName,
+                                                            @PathVariable String path) {
+        GroupRepresentation group = keycloakService.getGroupByPath(realmName, path);
+        return ResponseEntity.ok(group);
+    }
+    
+    @PutMapping("/realms/{realmName}/groups/{groupId}")
+    public ResponseEntity<Void> updateGroup(@PathVariable String realmName,
+                                          @PathVariable String groupId,
+                                          @RequestBody GroupRepresentation groupRepresentation) {
+        keycloakService.updateGroup(realmName, groupId, groupRepresentation);
+        return ResponseEntity.ok().build();
+    }
+    
+    @DeleteMapping("/realms/{realmName}/groups/{groupId}")
+    public ResponseEntity<Void> deleteGroup(@PathVariable String realmName,
+                                          @PathVariable String groupId) {
+        keycloakService.deleteGroup(realmName, groupId);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/realms/{realmName}/groups/{groupId}/members")
+    public ResponseEntity<List<UserRepresentation>> getGroupMembers(@PathVariable String realmName,
+                                                                  @PathVariable String groupId) {
+        List<UserRepresentation> members = keycloakService.getGroupMembers(realmName, groupId);
+        return ResponseEntity.ok(members);
+    }
+    
+    @GetMapping("/realms/{realmName}/groups/{groupId}/roles")
+    public ResponseEntity<List<RoleRepresentation>> getGroupRoles(@PathVariable String realmName,
+                                                                @PathVariable String groupId) {
+        List<RoleRepresentation> roles = keycloakService.getGroupRealmRoles(realmName, groupId);
+        return ResponseEntity.ok(roles);
+    }
+    
+    @PostMapping("/realms/{realmName}/groups/{groupId}/roles")
+    public ResponseEntity<Void> assignRoleToGroup(@PathVariable String realmName,
+                                                @PathVariable String groupId,
+                                                @RequestBody RoleRepresentation role) {
+        keycloakService.assignRoleToGroup(realmName, groupId, role);
+        return ResponseEntity.ok().build();
+    }
 
     @PostMapping
     public ResponseEntity<Map<String, String>> createUser(@RequestBody UserRequest userRequest) {
