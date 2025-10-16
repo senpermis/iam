@@ -1,17 +1,13 @@
 package com.fawroo.iam.service;
 
-import java.util.Collections;
-
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.fawroo.iam.config.KeycloakConfig;
 import com.fawroo.iam.model.dto.LoginRequest;
 import com.fawroo.iam.model.dto.TokenResponse;
 
@@ -22,9 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class AuthService {
-
-    // private final Keycloak keycloak;
-
     private final UserService userService;
 
     @Value("${keycloak.auth-server-url}")
@@ -34,7 +27,7 @@ public class AuthService {
     public TokenResponse login(LoginRequest loginRequest, String realm2) {
         try {
             // Créer une instance Keycloak pour le realm ciblé
-            Keycloak keycloak2 = KeycloakBuilder.builder()
+            Keycloak keycloak = KeycloakBuilder.builder()
                     .serverUrl(keycloakUrl)
                     .realm(realm2)
                     .clientId(loginRequest.getClientId())
@@ -46,7 +39,7 @@ public class AuthService {
             System.out.println("Realm used: " + realm2);
 
             // Obtenir le token
-            AccessTokenResponse tokenResponse = keycloak2.tokenManager().getAccessToken();
+            AccessTokenResponse tokenResponse = keycloak.tokenManager().getAccessToken();
 
             // Obtenir les infos utilisateur
             UserRepresentation user = getUserInfo(loginRequest.getUsername(), realm2);
@@ -153,7 +146,7 @@ public class AuthService {
         } catch (Exception e) {
             try {
                 // Si ça échoue, essayer de chercher par email
-                return userService.searchUsers(username, 0, 1)
+                return userService.searchUsers(username, 0, 1, realm)
                         .stream()
                         .findFirst()
                         .orElseThrow(() -> new RuntimeException("User not found"));

@@ -33,12 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
 
     private final Keycloak keycloak;
-    
-    @Value("${keycloak.realm}")
-    private String realm;
 
     // CREATE USER
-    public String createUser(UserRequest userRequest) {
+    public String createUser(UserRequest userRequest, String realm) {
         try {
             UsersResource usersResource = keycloak.realm(realm).users();
             UserRepresentation user = mapToUserRepresentation(userRequest);
@@ -59,7 +56,7 @@ public class UserService {
     }
 
     // GET USER BY ID
-    public UserRepresentation getUserById(String userId) {
+    public UserRepresentation getUserById(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             return userResource.toRepresentation();
@@ -87,7 +84,7 @@ public class UserService {
     }
 
     // GET ALL USERS
-    public List<UserRepresentation> getAllUsers() {
+    public List<UserRepresentation> getAllUsers(String realm) {
         try {
             return keycloak.realm(realm).users().list();
         } catch (Exception e) {
@@ -97,7 +94,7 @@ public class UserService {
     }
 
     // SEARCH USERS
-    public List<UserRepresentation> searchUsers(String search, int first, int max) {
+    public List<UserRepresentation> searchUsers(String search, int first, int max, String realm) {
         try {
             return keycloak.realm(realm).users().search(search, first, max);
         } catch (Exception e) {
@@ -107,7 +104,7 @@ public class UserService {
     }
 
     // UPDATE USER
-    public void updateUser(String userId, UserRequest userRequest) {
+    public void updateUser(String userId, UserRequest userRequest, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             UserRepresentation user = mapToUserRepresentation(userRequest);
@@ -122,7 +119,7 @@ public class UserService {
     }
 
     // DELETE USER
-    public void deleteUser(String userId) {
+    public void deleteUser(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             userResource.remove();
@@ -134,7 +131,7 @@ public class UserService {
     }
 
     // UPDATE PASSWORD
-    public void updatePassword(String userId, PasswordUpdateRequest passwordRequest) {
+    public void updatePassword(String userId, PasswordUpdateRequest passwordRequest, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
 
@@ -152,7 +149,7 @@ public class UserService {
     }
 
     // GET USER SESSIONS
-    public List<UserSessionRepresentation> getUserSessions(String userId) {
+    public List<UserSessionRepresentation> getUserSessions(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             return userResource.getUserSessions();
@@ -163,7 +160,7 @@ public class UserService {
     }
 
     // LOGOUT USER (invalidate all sessions)
-    public void logoutUser(String userId) {
+    public void logoutUser(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             userResource.logout();
@@ -175,9 +172,9 @@ public class UserService {
     }
 
     // GET USER PROFILE
-    public UserProfile getUserProfile(String userId) {
+    public UserProfile getUserProfile(String userId, String realm) {
         try {
-            UserRepresentation user = getUserById(userId);
+            UserRepresentation user = getUserById(userId, realm);
             return mapToUserProfile(user);
         } catch (Exception e) {
             log.error("Error getting profile for user {}: {}", userId, e.getMessage());
@@ -186,7 +183,7 @@ public class UserService {
     }
 
     // ENABLE/DISABLE USER
-    public void setUserEnabled(String userId, boolean enabled) {
+    public void setUserEnabled(String userId, boolean enabled, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             UserRepresentation user = userResource.toRepresentation();
@@ -200,7 +197,7 @@ public class UserService {
     }
 
     // COUNT USERS
-    public Integer getUsersCount() {
+    public Integer getUsersCount(String realm) {
         try {
             return keycloak.realm(realm).users().count();
         } catch (Exception e) {
@@ -210,7 +207,7 @@ public class UserService {
     }
 
     // GET USER GROUPS
-    public List<GroupRepresentation> getUserGroups(String userId) {
+    public List<GroupRepresentation> getUserGroups(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             return userResource.groups();
@@ -221,7 +218,7 @@ public class UserService {
     }
 
     // ADD USER TO GROUP
-    public void addUserToGroup(String userId, String groupId) {
+    public void addUserToGroup(String userId, String groupId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             userResource.joinGroup(groupId);
@@ -233,7 +230,7 @@ public class UserService {
     }
 
     // REMOVE USER FROM GROUP
-    public void removeUserFromGroup(String userId, String groupId) {
+    public void removeUserFromGroup(String userId, String groupId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             userResource.leaveGroup(groupId);
@@ -245,7 +242,7 @@ public class UserService {
     }
 
     // GET USER ROLES
-    public List<RoleRepresentation> getUserRoles(String userId) {
+    public List<RoleRepresentation> getUserRoles(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             return userResource.roles().realmLevel().listAll();
@@ -256,7 +253,7 @@ public class UserService {
     }
 
     // ASSIGN ROLE TO USER
-    public void assignRoleToUser(String userId, RoleRepresentation role) {
+    public void assignRoleToUser(String userId, RoleRepresentation role, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             List<RoleRepresentation> roles = new ArrayList<>();
@@ -270,7 +267,7 @@ public class UserService {
     }
 
     // REMOVE ROLE FROM USER
-    public void removeRoleFromUser(String userId, RoleRepresentation role) {
+    public void removeRoleFromUser(String userId, RoleRepresentation role, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             List<RoleRepresentation> roles = new ArrayList<>();
@@ -284,7 +281,7 @@ public class UserService {
     }
 
     // GET USER CLIENT ROLES
-    public List<RoleRepresentation> getUserClientRoles(String userId, String clientId) {
+    public List<RoleRepresentation> getUserClientRoles(String userId, String clientId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             return userResource.roles().clientLevel(clientId).listAll();
@@ -295,7 +292,7 @@ public class UserService {
     }
 
     // SEND VERIFICATION EMAIL
-    public void sendVerificationEmail(String userId) {
+    public void sendVerificationEmail(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             userResource.sendVerifyEmail();
@@ -307,7 +304,7 @@ public class UserService {
     }
 
     // SEND RESET PASSWORD EMAIL
-    public void sendResetPassword(String userId) {
+    public void sendResetPassword(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             userResource.executeActionsEmail(List.of("UPDATE_PASSWORD"));
@@ -319,7 +316,7 @@ public class UserService {
     }
 
     // GET USER CONSENTS
-    public List<Map<String, Object>> getUserConsents(String userId) {
+    public List<Map<String, Object>> getUserConsents(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             List<Map<String, Object>> consents = userResource.getConsents();
@@ -332,7 +329,7 @@ public class UserService {
     }
 
     // REVOKE USER CONSENTS
-    public void revokeUserConsents(String userId) {
+    public void revokeUserConsents(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             userResource.revokeConsent(userId);
@@ -344,7 +341,7 @@ public class UserService {
     }
 
     // GET OFFLINE SESSIONS
-    public List<UserSessionRepresentation> getOfflineSessions(String userId, String clientId) {
+    public List<UserSessionRepresentation> getOfflineSessions(String userId, String clientId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             return userResource.getOfflineSessions(clientId);
@@ -355,7 +352,7 @@ public class UserService {
     }
 
     // GET USER FEDERATED IDENTITY
-    public List<FederatedIdentityRepresentation> getUserFederatedIdentity(String userId) {
+    public List<FederatedIdentityRepresentation> getUserFederatedIdentity(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             return userResource.getFederatedIdentity();
@@ -366,7 +363,7 @@ public class UserService {
     }
 
     // CHECK USER EXISTS
-    public boolean userExists(String userId) {
+    public boolean userExists(String userId, String realm) {
         try {
             UserResource userResource = keycloak.realm(realm).users().get(userId);
             userResource.toRepresentation(); // Will throw exception if user doesn't exist
@@ -377,10 +374,10 @@ public class UserService {
     }
 
     // BULK USER OPERATIONS - Disable multiple users
-    public void bulkDisableUsers(List<String> userIds) {
+    public void bulkDisableUsers(List<String> userIds, String realm) {
         try {
             for (String userId : userIds) {
-                setUserEnabled(userId, false);
+                setUserEnabled(userId, false, realm);
             }
             log.info("Bulk disabled {} users", userIds.size());
         } catch (Exception e) {
