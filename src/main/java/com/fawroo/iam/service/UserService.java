@@ -70,7 +70,7 @@ public class UserService {
     }
 
     // GET USER BY USERNAME
-    public UserRepresentation getUserByUsername(String username) {
+    public UserRepresentation getUserByUsername(String username, String realm) {
         try {
             List<UserRepresentation> users = keycloak.realm(realm).users()
                     .search(username, 0, 1);

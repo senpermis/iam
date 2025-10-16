@@ -51,8 +51,8 @@ public class UserController {
     }
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<UserProfile> getUserByUsername(@PathVariable String username) {
-        UserRepresentation user = userService.getUserByUsername(username);
+    public ResponseEntity<UserProfile> getUserByUsername(@PathVariable String username, @RequestParam String realm) {
+        UserRepresentation user = userService.getUserByUsername(username, realm);
         UserProfile profile = mapToUserProfile(user);
         return ResponseEntity.ok(profile);
     }
